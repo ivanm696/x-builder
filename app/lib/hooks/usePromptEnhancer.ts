@@ -16,8 +16,13 @@ export function usePromptEnhancer() {
     setEnhancingPrompt(true);
     setPromptEnhanced(false);
 
+    const providerConfig = JSON.parse(localStorage.getItem('x-builder-provider') || '{}');
     const response = await fetch('/api/enhancer', {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-llm-provider': providerConfig.provider || 'anthropic',
+      },
       body: JSON.stringify({
         message: input,
       }),

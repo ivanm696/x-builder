@@ -5,6 +5,7 @@ import { classNames } from '~/utils/classNames';
 import { HeaderActionButtons } from './HeaderActionButtons.client';
 import { ChatDescription } from '~/lib/persistence/ChatDescription.client';
 import { selectDirectory, selectedDirectoryHandle } from '~/lib/persistence/fileSystem';
+import { ProviderSelector } from '~/components/ui/ProviderSelector.client';
 
 export function Header() {
   const chat = useStore(chatStore);
@@ -29,26 +30,32 @@ export function Header() {
       <span className="flex-1 px-4 truncate text-center text-bolt-elements-textPrimary">
         <ClientOnly>{() => <ChatDescription />}</ClientOnly>
       </span>
-      {chat.started && (
-        <ClientOnly>
-          {() => (
-            <div className="mr-1 flex items-center">
-              <button
-                onClick={selectDirectory}
-                className="mr-4 px-3 py-1 bg-bolt-elements-button-primary-background text-bolt-elements-button-primary-text rounded-md hover:bg-bolt-elements-button-primary-backgroundHover"
-              >
-                {directoryHandle ? 'Change Folder' : 'Select Folder'}
-              </button>
-              {directoryHandle && (
-                <span className="mr-4 text-bolt-elements-textSecondary">
-                  Selected: {directoryHandle.name}
-                </span>
-              )}
-              <HeaderActionButtons />
-            </div>
-          )}
-        </ClientOnly>
-      )}
+      <div className="flex items-center gap-3">
+        {/* Provider selector — always visible */}
+        <ClientOnly>{() => <ProviderSelector />}</ClientOnly>
+
+        {chat.started && (
+          <ClientOnly>
+            {() => (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={selectDirectory}
+                  className="px-3 py-1 bg-bolt-elements-button-primary-background text-bolt-elements-button-primary-text
+                    rounded-md hover:bg-bolt-elements-button-primary-backgroundHover text-sm"
+                >
+                  {directoryHandle ? 'Change Folder' : 'Select Folder'}
+                </button>
+                {directoryHandle && (
+                  <span className="text-bolt-elements-textSecondary text-sm">
+                    {directoryHandle.name}
+                  </span>
+                )}
+                <HeaderActionButtons />
+              </div>
+            )}
+          </ClientOnly>
+        )}
+      </div>
     </header>
   );
 }

@@ -1,6 +1,6 @@
 import { streamText as _streamText, convertToCoreMessages } from 'ai';
-import { getAPIKey } from '~/lib/.server/llm/api-key';
-import { getAnthropicModel } from '~/lib/.server/llm/model';
+import { getAPIKey, getProvider } from '~/lib/.server/llm/api-key';
+import { getModel } from '~/lib/.server/llm/model';
 import { MAX_TOKENS } from './constants';
 import { getSystemPrompt } from './prompts';
 
@@ -18,17 +18,23 @@ interface Message {
 }
 
 export type Messages = Message[];
-
 export type StreamingOptions = Omit<Parameters<typeof _streamText>[0], 'model'>;
 
-export function streamText(messages: Messages, env: Env, options?: StreamingOptions) {
+export function streamText(messages: Messages, env: Env, request: Request, options?: StreamingOptions) {
+  const provider = getProvider(request);
+  const apiKey = getAPIKey(env, provider);
+  const model = getModel(apiKey, provider);
+
+  // Groq doesn't support anthropic-beta header
+  const extraHeaders = provider === 'anthropic'
+    ? { 'anthropic-beta': 'max-tokens-3-5-sonnet-2024-07-15' }
+    : {};
+
   return _streamText({
-    model: getAnthropicModel(getAPIKey(env)),
+    model,
     system: getSystemPrompt(),
     maxTokens: MAX_TOKENS,
-    headers: {
-      'anthropic-beta': 'max-tokens-3-5-sonnet-2024-07-15',
-    },
+    headers: extraHeaders,
     messages: convertToCoreMessages(messages),
     ...options,
   });

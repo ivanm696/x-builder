@@ -77,6 +77,11 @@ export const ChatImpl = memo(({ initialMessages, storeMessageHistory }: ChatProp
 
   const { messages, isLoading, input, handleInputChange, setInput, stop, append } = useChat({
     api: '/api/chat',
+    headers: {
+      'x-llm-provider': typeof localStorage !== 'undefined'
+        ? (JSON.parse(localStorage.getItem('x-builder-provider') || '{}').provider || 'anthropic')
+        : 'anthropic',
+    },
     onError: (error) => {
       logger.error('Request failed\n\n', error);
       toast.error('There was an error processing your request');

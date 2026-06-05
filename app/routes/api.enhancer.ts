@@ -15,21 +15,13 @@ async function enhancerAction({ context, request }: ActionFunctionArgs) {
 
   try {
     const result = await streamText(
-      [
-        {
-          role: 'user',
-          content: stripIndents`
+      [{ role: 'user', content: stripIndents`
           I want you to improve the user prompt that is wrapped in \`<original_prompt>\` tags.
-
           IMPORTANT: Only respond with the improved prompt and nothing else!
-
-          <original_prompt>
-            ${message}
-          </original_prompt>
-        `,
-        },
-      ],
+          <original_prompt>${message}</original_prompt>
+        ` }],
       context.cloudflare.env,
+      request,
     );
 
     const transformStream = new TransformStream({
@@ -41,20 +33,13 @@ async function enhancerAction({ context, request }: ActionFunctionArgs) {
           .map(parseStreamPart)
           .map((part) => part.value)
           .join('');
-
         controller.enqueue(encoder.encode(processedChunk));
       },
     });
 
-    const transformedStream = result.toAIStream().pipeThrough(transformStream);
-
-    return new StreamingTextResponse(transformedStream);
+    return new StreamingTextResponse(result.toAIStream().pipeThrough(transformStream));
   } catch (error) {
     console.log(error);
-
-    throw new Response(null, {
-      status: 500,
-      statusText: 'Internal Server Error',
-    });
+    throw new Response(null, { status: 500, statusText: 'Internal Server Error' });
   }
 }
